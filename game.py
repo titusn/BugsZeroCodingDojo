@@ -1,12 +1,19 @@
 from typing import List
 from collections import deque
 
+class InvalidNumberOfPlayers(Exception):
+  pass
+
 class Game:
-    def __init__(self):
+    def __init__(self, players=None):
         self.players: List[str] = []
         self.places: List[int] = [0] * 6 
         self.purses: List[int] = [0] * 6
         self.inPenaltyBox: List[bool] = [False] * 6
+
+        if players is not None:
+          for player in players:
+            self.add(player)
 
         # https://realpython.com/linked-lists-python/
         self.popQuestions = deque()
@@ -30,10 +37,13 @@ class Game:
         return (self.howManyPlayers() >= 2)
 
     def add(self, playerName: str) -> bool:
+        if self.howManyPlayers() == len(self.places):
+          raise InvalidNumberOfPlayers()
+
         self.players.append(playerName)
-        self.places[self.howManyPlayers()] = 0
-        self.purses[self.howManyPlayers()] = 0
-        self.inPenaltyBox[self.howManyPlayers()] = False
+        self.places[self.howManyPlayers() - 1] = 0
+        self.purses[self.howManyPlayers() - 1] = 0
+        self.inPenaltyBox[self.howManyPlayers() - 1] = False
         print(playerName + " was added")
         print("They are player number " + str(len(self.players)))
         return True
@@ -42,6 +52,9 @@ class Game:
         return len(self.players)
 
     def roll(self, roll: int) -> None:
+        if not self.isPlayable():
+          raise InvalidNumberOfPlayers()
+
         print(self.players[self.currentPlayer] + " is the current player")
         print("They have rolled a " + str(roll))
 
@@ -113,7 +126,7 @@ class Game:
                     self.currentPlayer = 0
                 return True
         else:
-            print("Answer was corrent!!!!")
+            print("Answer was corrent!!!!") # restored bug
             self.purses[self.currentPlayer] += 1
             print(
                 self.players[self.currentPlayer] + " now has " +
@@ -134,7 +147,7 @@ class Game:
         self.inPenaltyBox[self.currentPlayer] = True
 
         self.currentPlayer += 1
-        if self.currentPlayer == len(self.w):
+        if self.currentPlayer == len(self.players):
             self.currentPlayer = 0
         return True
 
